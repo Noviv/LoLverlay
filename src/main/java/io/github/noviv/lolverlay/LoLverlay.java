@@ -1,15 +1,12 @@
 package io.github.noviv.lolverlay;
 
+import io.github.noviv.lolverlay.ni.NativeInterface;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.event.WindowAdapter;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import javafx.stage.WindowEvent;
+import java.awt.event.WindowEvent;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
-import org.jnativehook.GlobalScreen;
-import org.jnativehook.NativeHookException;
 import org.jnativehook.keyboard.NativeKeyEvent;
 
 public class LoLverlay {
@@ -27,6 +24,8 @@ public class LoLverlay {
 
         NativeInterface.setJNHKeyListener((keys) -> {
             if (keys[NativeKeyEvent.VC_ESCAPE]) {
+                frame.dispatchEvent(new WindowEvent(frame,
+                        WindowEvent.WINDOW_CLOSING));
                 System.exit(0);
             }
         });
@@ -37,10 +36,12 @@ public class LoLverlay {
         frame.setUndecorated(true);
         frame.setBackground(new Color(0, 0, 0, 0));
         frame.addWindowListener(new WindowAdapter() {
+            @Override
             public void windowClosing(WindowEvent we) {
                 NativeInterface.close();
             }
         });
+        frame.setAlwaysOnTop(true);
 
         frame.getContentPane().setLayout(new BorderLayout());
         frame.getContentPane().add(new JLabel("text field north"), java.awt.BorderLayout.NORTH);
