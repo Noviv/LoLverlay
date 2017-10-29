@@ -55,14 +55,14 @@ public class NativeInterface {
     }
 
     private static NativeKeyListener currKeyListener;
+    private static boolean winHookRunning;
     private static WinNT.HANDLE winHook;
-    public static boolean cb = false;
+    private static Thread winHookThread;
 
     private NativeInterface() {
     }
 
     public static void init() {
-        Ole32.INSTANCE.CoInitializeEx(null, 0);
         System.out.println("initializing native interface");
 
         Logger l = Logger.getLogger(GlobalScreen.class.getPackage().getName());
@@ -79,34 +79,45 @@ public class NativeInterface {
         User32Ex.WinEventProc testproc = (hWinEventHook,
                 event, hwnd, idObject, idChild,
                 dwEventThread, dwmsEventTime) -> {
-//            char[] buf = new char[1024 * 2];
-//            User32.GetWindowTextW(User32.GetForegroundWindow(), buf, 1024);
-//            System.out.println("active title: " + Native.toString(buf));
-            System.out.println("event proc");
-            cb = true;
+            char[] buf = new char[1024 * 2];
+            User32.INSTANCE.GetWindowText(User32.INSTANCE.GetForegroundWindow(), buf, 1024);
+            System.out.println("active title: " + Native.toString(buf));
         };
 
-        if (Native.getLastError() != 0) {
-            System.err.println("error");
-        }
+        winHookThread = new Thread(() -> {
+            winHook = User32Ex.INSTANCE.SetWinEventHook(
+                    0x0003,
+                    0x0003,
+                    Pointer.NULL, testproc, 0, 0,
+                    2);
+            winHookRunning = true;
 
-        winHook = User32Ex.INSTANCE.SetWinEventHook(
-                0x0003,
-                0x0003,
-                Pointer.NULL, testproc, 0, 0,
-                2);
-
-        WinUser.MSG msg = new WinUser.MSG();
-        while (!cb) {
-            if (User32.INSTANCE.PeekMessage(msg, null, 0, 0, 0)) {
-                User32.INSTANCE.TranslateMessage(msg);
-                User32.INSTANCE.DispatchMessage(msg);
+            WinUser.MSG msg = new WinUser.MSG();
+            while (winHookRunning) {
+                if (User32.INSTANCE.PeekMessage(msg, null, 0, 0, 0)) {
+                    User32.INSTANCE.TranslateMessage(msg);
+                    User32.INSTANCE.DispatchMessage(msg);
+                }
+                try {
+                    Thread.sleep(50);
+                } catch (InterruptedException ex) {
+                    System.err.println("sleep err: " + ex);
+                }
             }
-        }
+        });
+        winHookThread.setPriority(Thread.MIN_PRIORITY);
+        winHookThread.start();
     }
 
     public static void close() {
         System.out.println("closing native interface");
+
+        winHookRunning = false;
+        try {
+            winHookThread.join(500);
+        } catch (InterruptedException ex) {
+            System.err.println("joining error: " + ex);
+        }
 
         if (winHook != null) {
             User32.INSTANCE.UnhookWinEvent(winHook);
