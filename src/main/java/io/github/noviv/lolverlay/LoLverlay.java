@@ -23,7 +23,6 @@ public class LoLverlay {
                 NativeInterface.destroy();
             }
         });
-        frame.setVisible(true);
     }
 
     private void initNative() {
@@ -33,10 +32,6 @@ public class LoLverlay {
             if (keys[NativeKeyEvent.VC_ESCAPE]) {
                 frame.dispatchEvent(new WindowEvent(frame,
                         WindowEvent.WINDOW_CLOSING));
-                System.exit(0);
-            }
-            if (keys[NativeKeyEvent.VC_ALT] && keys[NativeKeyEvent.VC_E]) {
-                frame.trigger();
             }
         });
 
