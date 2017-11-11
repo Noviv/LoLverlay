@@ -7,7 +7,7 @@ import org.jnativehook.keyboard.NativeKeyEvent;
 
 public class LoLverlay {
 
-    private LoLverlayFrame frame;
+    private LoLverlayWindow frame;
 
     public LoLverlay() {
         initFrame();
@@ -16,7 +16,7 @@ public class LoLverlay {
     }
 
     private void initFrame() {
-        frame = new LoLverlayFrame();
+        frame = new LoLverlayWindow();
         frame.addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent we) {
@@ -28,14 +28,16 @@ public class LoLverlay {
     private void initNative() {
         NativeInterface.init();
 
-        NativeInterface.setGlobalKeyListener((keys) -> {
+        NativeInterface.setGlobalKeyListener(keys -> {
             if (keys[NativeKeyEvent.VC_ESCAPE]) {
                 frame.dispatchEvent(new WindowEvent(frame,
                         WindowEvent.WINDOW_CLOSING));
             }
         });
 
-        NativeInterface.setGlobalWindowFocusListener(str -> System.out.println("window: " + str));
+        NativeInterface.setGlobalWindowFocusListener(str -> {
+            frame.setVisible(str.contains("Chrome"));
+        });
     }
 
     public static void main(String[] args) {

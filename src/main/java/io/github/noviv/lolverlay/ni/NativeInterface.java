@@ -67,6 +67,7 @@ public class NativeInterface {
      * like a new NativeInterface.
      */
     public synchronized static void destroy() {
+        System.out.println("destroying native interface");
         currKeyListener = null;
 
         if (wfListener != null) {

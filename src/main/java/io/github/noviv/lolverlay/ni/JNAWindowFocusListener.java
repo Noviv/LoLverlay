@@ -8,7 +8,7 @@ import java.util.function.Consumer;
 
 public class JNAWindowFocusListener {
 
-    private Consumer<String> callback;
+    private final Consumer<String> callback;
     private Thread winHookThread;
     private boolean winHookRunning;
     private WinNT.HANDLE winHook;
@@ -50,6 +50,7 @@ public class JNAWindowFocusListener {
                 try {
                     Thread.sleep(50);
                 } catch (InterruptedException e) {
+                    System.err.println("thread sleep failed");
                 }
             }
         }, "LoLverlay - WinHook Thread");
@@ -59,6 +60,7 @@ public class JNAWindowFocusListener {
 
     public void destroy() {
         winHookRunning = false;
+
         try {
             winHookThread.join(500);
         } catch (InterruptedException ex) {
